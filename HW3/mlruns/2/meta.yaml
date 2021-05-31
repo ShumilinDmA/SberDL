@@ -1,0 +1,4 @@
+artifact_location: file:///home/dmitrii/SberDL/HW3/mlruns/2
+experiment_id: '2'
+lifecycle_stage: active
+name: MLflow_experiment_mlp
