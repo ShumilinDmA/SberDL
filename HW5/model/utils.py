@@ -102,3 +102,11 @@ class Sparsemax(nn.Module):
         self.grad_input = nonzeros * (grad_output - sum.expand_as(grad_output))
 
         return self.grad_input
+
+
+def split(x, meaningful_part: float):
+    batch_size, feature_dim = x.shape
+    left_size = int(feature_dim * meaningful_part)
+    right_size = feature_dim - left_size
+    left_data, right_data = torch.split(x, (left_size, right_size), dim=-1)
+    return left_data, right_data

@@ -1,5 +1,6 @@
 import torch
 from torch.utils.data import Dataset
+from collections import OrderedDict
 
 
 class CustomDataset(Dataset):
@@ -19,6 +20,7 @@ class CustomDataset(Dataset):
     def __getitem__(self, indx):
         row = self.X.iloc[indx, :]
         numerical_values = row[self.numerical_columns].values
-        category_values = {col: torch.tensor(row[col], dtype=torch.long) for col in self.categorical_columns}
+        category_values = OrderedDict({col: torch.tensor(row[col], dtype=torch.long)
+                                       for col in self.categorical_columns})
         target = self.y[indx]
         return category_values, numerical_values, target

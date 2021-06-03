@@ -1,0 +1,13 @@
+seed: 42
+batch_size: 512
+num_workers: 2
+epoches: 100
+learning_rate: 3e-4
+experiment_name: 'first_try'
+lambda_sparce: 0.5  # coefficient before sparce loss function
+test_size: 0.2
+
+defaults:
+  - tabnet: tabnet  # Config for classical Tabnet architecture
+  - classifier_head: head  # config for classification head
+  - optimizer: adam # Choose optimizer config
