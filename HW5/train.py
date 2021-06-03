@@ -5,6 +5,7 @@ from sklearn.model_selection import train_test_split
 from omegaconf import DictConfig
 import random
 import numpy as np
+from tqdm.notebook import tqdm
 
 # MLflow
 import mlflow
@@ -59,25 +60,33 @@ def train_model(model,
 
     train_loader = DataLoader(train_dataset, batch_size=batch_size, num_workers=num_workers, shuffle=True)
     valid_loader = DataLoader(valid_dataset, batch_size=batch_size, num_workers=num_workers, shuffle=False)
+
+    for epoch in tqdm(range(epoches)):
+        print(epoch)
     # TODO write loop for training and validation
+
+    return
 
 
 @hydra.main(config_name="config.yaml", config_path='./configs')
 def main(cfg: DictConfig) -> None:
-    original_pwd = utils.get_original_cwd()
+    # Fix all seeds
     random.seed(cfg.seed)
     np.random.seed(cfg.seed)
     torch.manual_seed(cfg.seed)
+
     train_dataset, valid_dataset = load_data(data_path=DATA_PATH, seed=cfg.seed, test_size=cfg.test_size)
 
+    # MLflow block
+    original_pwd = utils.get_original_cwd()
     mlflow.set_tracking_uri('file://' + original_pwd + '/mlruns')
     client = MlflowClient()
-
     try:
         experiment_id = client.create_experiment(cfg.experiment_name)
     except MlflowException:  # If such experiment already exist
         experiment_id = client.get_experiment_by_name(cfg.experiment_name).experiment_id
 
+    # Define model
     model = TabNetClassifier(n_output_classes=cfg.n_output_classes,
                              n_classification_layer=cfg.n_classification_layer,
                              num_unique_values_dict=train_dataset.num_unique_values_dict,
@@ -92,22 +101,38 @@ def main(cfg: DictConfig) -> None:
                              momentum=cfg.momentum,
                              gamma=cfg.gamma)
 
+    # Choosing correct loss function for classification
     if cfg.n_output_classes == 1:
         classification_criterion = nn.BCEWithLogitsLoss()
     else:
         classification_criterion = nn.CrossEntropyLoss()
     sparce_criterion = SparceLoss()
 
+    # Define specific optimizer
     optim = cfg.optimizer
     if optim.name == 'Adam':
         optimizer = torch.optim.Adam(model.parameters(), lr=cfg.learning_rate,
                                      betas=(optim.betas.one, optim.betas.two), weight_decay=optim.weight_decay)
-    # TODO Add several different optimizers
+    elif optim.name == 'AdamW':
+        optimizer = torch.optim.AdamW(model.parameters(), lr=cfg.learning_rate,
+                                      betas=(optim.betas.one, optim.betas.two), weight_decay=optim.weight_decay)
+    elif optim.name == 'RMSprop':
+        optimizer = torch.optim.RMSprop(model.parameters(), lr=cfg.learning_rate, weight_decay=optim.weight_decay,
+                                        momentum=optim.momentum, alpha=optim.alpha)
+    elif optim.name == 'SGD':
+        optimizer = torch.optim.SGD(model.parameters(), lr=cfg.learning_rate, weight_decay=optim.weight_decay,
+                                    momentum=optim.momentum, nesterov=optim.nesterov)
+    else:
+        raise ValueError("No such optimizer. Available optimizers are: Adam, AdamW, RMSprop, SGD")
 
-    with mlflow.start_run(experiment_id=experiment_id) as run:
+    # TODO Add scheduler and config to it
+
+    with mlflow.start_run(experiment_id=experiment_id, run_name=cfg.run_name) as run:
+
         train_model(model, train_dataset=train_dataset, valid_dataset=valid_dataset,
                     classification_critetion=classification_criterion, sparce_ctiterion=sparce_criterion,
                     optimizer=optimizer, epoches=cfg.epoches, batch_size=cfg.batch_size, num_workers=cfg.num_workers)
+
         # TODO log all data from config and config file also
 
 

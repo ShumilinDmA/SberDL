@@ -3,11 +3,13 @@ batch_size: 512
 num_workers: 2
 epoches: 100
 learning_rate: 3e-4
-experiment_name: 'first_try'
 lambda_sparce: 0.5  # coefficient before sparce loss function
-test_size: 0.2
+test_size: 0.2  # Proportion of data in valid_dataset
+experiment_name: 'first_try'
+run_name: 'hello world!'
 
+# Config Modules
 defaults:
   - tabnet: tabnet  # Config for classical Tabnet architecture
   - classifier_head: head  # config for classification head
-  - optimizer: adam # Choose optimizer config
+  - optimizer: Adam # Choose optimizer config. Available Adam, AdamW, RMSprop, SGD

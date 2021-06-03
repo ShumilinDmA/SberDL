@@ -1,4 +1,3 @@
-import torch
 import torch.nn as nn
 from model.tabnet import TabNet
 
@@ -47,7 +46,6 @@ class TabNetClassifier(nn.Module):
         self.momentum = momentum
         self.gamma = gamma
 
-        print(self.n_classification_layer)
         self.TabNet = TabNet(num_unique_values_dict=self.num_unique_values_dict,
                              embedding_size=self.embedding_size,
                              n_numerical_columns=self.n_numerical_columns,
@@ -72,4 +70,3 @@ class TabNetClassifier(nn.Module):
         for layer in self.classification_layers:
             x = layer(x)
         return x, masks
-
