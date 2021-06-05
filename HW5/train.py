@@ -5,7 +5,6 @@ from sklearn.model_selection import train_test_split
 from omegaconf import DictConfig
 import random
 import numpy as np
-from tqdm.notebook import tqdm
 
 # MLflow
 import mlflow
@@ -19,12 +18,12 @@ from hydra import utils
 # Pytorch
 import torch
 import torch.nn as nn
-from torch.utils.data import DataLoader
 
 # Custom files
 from dataset.datasets import CustomDataset
 from model.classification_network import TabNetClassifier
 from model.sparce_loss import SparceLoss
+from train_aux import train_model
 
 
 DATA_PATH = os.path.join(os.path.abspath("."), "data/encoded_dataset.csv")
@@ -34,6 +33,8 @@ def load_data(data_path: str, seed: int, test_size: float = 0.2):
     df = pd.read_csv(data_path)
     data_train, data_valid = train_test_split(df, test_size=test_size, stratify=df['salary'], shuffle=True,
                                               random_state=seed)
+    data_train.reset_index(drop=True, inplace=True)
+    data_valid.reset_index(drop=True, inplace=True)
 
     categorical_columns = ['workclass', "education", "marital-status", "occupation", 'relationship',
                            'race', 'sex', 'hours_per_week_bins', 'native_country']
@@ -46,26 +47,6 @@ def load_data(data_path: str, seed: int, test_size: float = 0.2):
                                   categorical_columns=categorical_columns, target=target)
 
     return train_dataset, valid_dataset
-
-
-def train_model(model,
-                train_dataset: torch.utils.data.Dataset,
-                valid_dataset: torch.utils.data.Dataset,
-                classification_critetion,
-                sparce_ctiterion,
-                optimizer,
-                epoches: int,
-                batch_size: int,
-                num_workers: int):
-
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, num_workers=num_workers, shuffle=True)
-    valid_loader = DataLoader(valid_dataset, batch_size=batch_size, num_workers=num_workers, shuffle=False)
-
-    for epoch in tqdm(range(epoches)):
-        print(epoch)
-    # TODO write loop for training and validation
-
-    return
 
 
 @hydra.main(config_name="config.yaml", config_path='./configs')
@@ -123,17 +104,41 @@ def main(cfg: DictConfig) -> None:
         optimizer = torch.optim.SGD(model.parameters(), lr=cfg.learning_rate, weight_decay=optim.weight_decay,
                                     momentum=optim.momentum, nesterov=optim.nesterov)
     else:
-        raise ValueError("No such optimizer. Available optimizers are: Adam, AdamW, RMSprop, SGD")
+        raise NotImplementedError("No such optimizer. Available optimizers are: Adam, AdamW, RMSprop, SGD")
 
-    # TODO Add scheduler and config to it
+    schedule = cfg.scheduler
+    if schedule.enable:
+        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=schedule.factor,
+                                                               patience=schedule.patience, threshold=0.0001,
+                                                               cooldown=schedule.cooldown, min_lr=0, eps=1e-08,
+                                                               verbose=schedule.verbose)
+    else:
+        scheduler = None
 
-    with mlflow.start_run(experiment_id=experiment_id, run_name=cfg.run_name) as run:
+    with mlflow.start_run(experiment_id=experiment_id, run_name=cfg.run_name):
+        mlflow.log_param('batch_size', cfg.batch_size)
+        mlflow.log_param('epoches', cfg.epoches)
+        mlflow.log_param("init_learning_rate", cfg.learning_rate)
+        mlflow.log_param("lambda_sparce", cfg.lambda_sparce)
+        mlflow.log_param("n_decision_steps", cfg.n_decision_steps)
+        mlflow.log_param("n_shared_layers", cfg.n_shared_layers)
+        mlflow.log_param("n_decision_blocks", cfg.n_decision_blocks)
+        mlflow.log_param("n_output_classes", cfg.n_output_classes)
+        mlflow.log_param("n_classification_layer", cfg.n_classification_layer)
+        mlflow.log_param("embedding_size", cfg.embedding_size)
+        mlflow.log_param("hidden_size", cfg.hidden_size)
+        mlflow.log_param("meaningful_part", cfg.meaningful_part)
+        mlflow.log_param("virtual_batch_size", cfg.virtual_batch_size)
+        mlflow.log_param("momentum", cfg.momentum)
+        mlflow.log_param("gamma", cfg.gamma)
+        mlflow.log_param("optimizer", optim)
+        mlflow.log_param("scheduler", schedule)
+        mlflow.log_param('seed', cfg.seed)
+        mlflow.log_artifact(f"{os.getcwd()}/.hydra/config.yaml")
 
-        train_model(model, train_dataset=train_dataset, valid_dataset=valid_dataset,
-                    classification_critetion=classification_criterion, sparce_ctiterion=sparce_criterion,
-                    optimizer=optimizer, epoches=cfg.epoches, batch_size=cfg.batch_size, num_workers=cfg.num_workers)
-
-        # TODO log all data from config and config file also
+        train_model(cfg, model, train_dataset=train_dataset, valid_dataset=valid_dataset,
+                    classification_criterion=classification_criterion, sparce_criterion=sparce_criterion,
+                    optimizer=optimizer, scheduler=scheduler)
 
 
 if __name__ == "__main__":

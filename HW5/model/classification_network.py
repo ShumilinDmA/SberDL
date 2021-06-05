@@ -65,8 +65,11 @@ class TabNetClassifier(nn.Module):
                                                                         output_size=self.n_output_classes)
                                                     for i in range(self.n_classification_layer)])
 
+        self.batch_norm = nn.BatchNorm1d(self.TabNet.tabnet_output_size)
+
     def forward(self, batch):
         x, masks = self.TabNet(batch)
+        x = self.batch_norm(x)
         for layer in self.classification_layers:
             x = layer(x)
         return x, masks

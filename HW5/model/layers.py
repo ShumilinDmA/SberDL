@@ -100,54 +100,49 @@ class FeatureTransformer(nn.Module):
 
 
 class AttentiveTransformer(nn.Module):
-    def __init__(self, input_size: int, output_size: int, gamma: float,
+    def __init__(self, input_size: int, output_size: int,
                  virtual_batch_size: int, momentum: float):
         super(AttentiveTransformer, self).__init__()
         self.virtual_batch_size = virtual_batch_size
         self.momentum = momentum
-        self.gamma = gamma
         self.input_size = input_size
         self.output_size = output_size
-        self.prior_scales = None
         self.fc = nn.Linear(self.input_size, self.output_size)
         self.batch_norm = GBN(self.output_size, virtual_batch_size=self.virtual_batch_size, momentum=self.momentum)
         self.sparcemax = Sparsemax(dim=-1)
 
-    def forward(self, batch):
+    def forward(self, batch, prior_scales):
         x = self.fc(batch)
         x = self.batch_norm(x)
-        if not isinstance(self.prior_scales, torch.Tensor):
-            self.prior_scales = torch.ones_like(x)
-        x = self.prior_scales * x
+        x = prior_scales * x
         mask = self.sparcemax(x)
-        self.prior_scales = self.prior_scales * (self.gamma - mask)
         return mask
 
 
 class DecisionStepBlock(nn.Module):
-    def __init__(self, shared_block, gamma: float, meaningful_part: float, n_decision_block: int,
+    def __init__(self, shared_block, meaningful_part: float, n_decision_block: int,
                  virtual_batch_size: int, momentum: float):
         super(DecisionStepBlock, self).__init__()
         self.shared_block = shared_block
         self.n_decision_block = n_decision_block
-        self.gamma = gamma
         self.meaningful_part = meaningful_part
         self.virtual_batch_size = virtual_batch_size
         self.momentum = momentum
         self.attention_input = self.shared_block.output_size - int(self.meaningful_part * self.shared_block.output_size)
         self.attention_output = self.shared_block.input_size
+
         self.AttentiveTransformer = AttentiveTransformer(input_size=self.attention_input,
                                                          output_size=self.attention_output,
-                                                         gamma=self.gamma,
                                                          virtual_batch_size=self.virtual_batch_size,
                                                          momentum=self.momentum)
+
         self.FeatureTransformer = FeatureTransformer(n_decision_blocks=self.n_decision_block,
                                                      shared_block=self.shared_block,
                                                      virtual_batch_size=self.virtual_batch_size,
                                                      momentum=self.momentum)
 
-    def forward(self, input_data, to_attention, features):
-        mask = self.AttentiveTransformer(to_attention)
+    def forward(self, input_data, to_attention, features, prior_scales):
+        mask = self.AttentiveTransformer(to_attention, prior_scales)
         x = mask * features
         x = self.FeatureTransformer(x)
         left_data, right_data = split(x, meaningful_part=self.meaningful_part)

@@ -55,8 +55,7 @@ class TabNet(nn.Module):
                               n_decision_block=self.n_decision_blocks,
                               virtual_batch_size=self.virtual_batch_size,
                               momentum=self.momentum,
-                              meaningful_part=self.meaningful_part,
-                              gamma=self.gamma)
+                              meaningful_part=self.meaningful_part)
             for _ in range(self.n_decision_steps)
         ])
 
@@ -68,11 +67,13 @@ class TabNet(nn.Module):
         left_data, right_data = split(post_processed_features, self.meaningful_part)
 
         output_data = torch.zeros_like(left_data)
+        prior_scales = torch.ones_like(features)
 
         mask_list = []
         for layer in self.decision_steps_list:
             output_data, right_data, mask, features = layer(input_data=output_data, to_attention=right_data,
-                                                            features=features)
+                                                            features=features, prior_scales=prior_scales)
+            prior_scales = prior_scales * (self.gamma - mask)
             mask_list.append(mask)
         mask_list = torch.stack(mask_list)
 

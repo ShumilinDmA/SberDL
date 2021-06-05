@@ -2,9 +2,9 @@
 embedding_size: 5 # Embedding size for categorical features
 n_shared_layers: 2 # Number of shared layers in FeatureTransformer
 n_decision_blocks: 2 # Number of decision layer in FeatureTransformer after shared layers
-hidden_size: 256 # Internal dimensionality in decision step
+hidden_size: 32 # Internal dimensionality in decision step
 meaningful_part: 0.5 # Proportion to split data in split block. Bigger number - bigger port goes to a output
-n_decision_steps: 4 # Number of main decision steps
+n_decision_steps: 5 # Number of main decision steps
 virtual_batch_size: 128 # Virtual batch size for ghost batch normalization
 momentum: 0.98 # Momentum for ghost batch normalization
 gamma: 1.5 # Coefficient which take in to account prior scales in AttentiveTransformers
