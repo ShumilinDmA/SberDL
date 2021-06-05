@@ -3,6 +3,7 @@ from torch.utils.data import DataLoader
 import numpy as np
 from tqdm import tqdm
 import mlflow
+from torch.utils.tensorboard import SummaryWriter
 
 
 def train_epoch(cfg, model, dataloader,  clf_criterion, sparce_criterion, optimizer):
@@ -13,7 +14,7 @@ def train_epoch(cfg, model, dataloader,  clf_criterion, sparce_criterion, optimi
     size = 0
 
     model.train()
-    for X_cat, X_num, y_batch in tqdm(dataloader):
+    for X_cat, X_num, y_batch in dataloader:
         x_batch = [X_cat, X_num]
         optimizer.zero_grad()
         output, masks = model(x_batch)
@@ -52,7 +53,7 @@ def valid_epoch(cfg, model, dataloader,  clf_criterion, sparce_criterion):
 
     model.eval()
     with torch.no_grad():
-        for X_cat, X_num, y_batch in tqdm(dataloader):
+        for X_cat, X_num, y_batch in dataloader:
             x_batch = [X_cat, X_num]
             output, masks = model(x_batch)
 
@@ -92,6 +93,11 @@ def train_model(cfg,
     train_loader = DataLoader(train_dataset, batch_size=cfg.batch_size, num_workers=cfg.num_workers, shuffle=True)
     valid_loader = DataLoader(valid_dataset, batch_size=cfg.batch_size, num_workers=cfg.num_workers, shuffle=False)
 
+    # Use Tensorboard due automatically refreshing page :)
+    train_writer = SummaryWriter('./train')
+    valid_writer = SummaryWriter('./valid')
+    lr_writer = SummaryWriter('./lr')
+
     for epoch in tqdm(range(cfg.epoches)):
         train_loss, train_accuracy, train_clf_loss, train_sparce_loss = train_epoch(cfg, model,
                                                                                     train_loader,
@@ -110,11 +116,18 @@ def train_model(cfg,
         mlflow.log_metric("valid/loss", float(valid_loss), step=epoch)
         mlflow.log_metric("train/accuracy", float(train_accuracy), step=epoch)
         mlflow.log_metric("valid/accuracy", float(valid_accuracy), step=epoch)
+        mlflow.log_metric("learning_rate", float(scheduler._last_lr[-1]), step=epoch)
 
-        print(f'Epoch: {epoch}, Train loss: {round(train_loss, 4)},  Valid loss: {round(valid_loss, 4)}')
-        print(f'Epoch: {epoch}, Train Accuracy: {train_accuracy},  Valid Accuracy: {valid_accuracy}')
-        print(f'Train loss clf: {train_clf_loss}, Train loss sparce: {train_sparce_loss}')
-        print(f'Valid loss clf: {valid_clf_loss}, Valid loss sparce: {valid_sparce_loss}')
+        train_writer.add_scalar("loss", float(train_loss), epoch)
+        valid_writer.add_scalar("loss", float(valid_loss), epoch)
+        train_writer.add_scalar("accuracy", float(train_accuracy), epoch)
+        valid_writer.add_scalar("accuracy", float(valid_accuracy), epoch)
+        lr_writer.add_scalar("learning_rate", float(scheduler._last_lr[-1]), epoch)
+
+        # print(f'Epoch: {epoch}, Train loss: {round(train_loss, 4)},  Valid loss: {round(valid_loss, 4)}')
+        # print(f'Epoch: {epoch}, Train Accuracy: {train_accuracy},  Valid Accuracy: {valid_accuracy}')
+        # print(f'Train loss clf: {train_clf_loss}, Train loss sparce: {train_sparce_loss}')
+        # print(f'Valid loss clf: {valid_clf_loss}, Valid loss sparce: {valid_sparce_loss}')
     return "Model is fitted!"
 
 
