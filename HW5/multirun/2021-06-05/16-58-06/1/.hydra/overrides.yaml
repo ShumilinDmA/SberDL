@@ -1,0 +1,4 @@
+- scheduler.enable=True
+- n_decision_steps=5
+- batch_size=512
+- run_name=multi_run

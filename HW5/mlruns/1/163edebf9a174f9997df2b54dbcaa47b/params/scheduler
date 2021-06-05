@@ -1,0 +1,1 @@
+{'enable': True, 'factor': 0.5, 'patience': 5, 'cooldown': 5, 'verbose': True}

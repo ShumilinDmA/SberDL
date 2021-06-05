@@ -6,7 +6,7 @@ learning_rate: 0.02
 lambda_sparce: 0.0001  # coefficient before sparce loss function
 test_size: 0.2  # Proportion of data in valid_dataset
 experiment_name: 'Tabnet_Homework'
-run_name: 'Default!'
+run_name: 'Default'
 
 # Config Modules
 defaults:
