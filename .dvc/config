@@ -2,6 +2,6 @@
     analytics = false
     remote = myremote
 [cache]
-    type = "hardlink,symlink"
+    type = hardlink, symlink
 ['remote "myremote"']
     url = gdrive://1Mwd0MuJjmV591u2ZrkE8IJI0VgnYal2I
