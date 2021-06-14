@@ -1,0 +1,6 @@
+# @package _group_
+name: AdamW
+weight_decay: 0.01
+betas:
+  one: 0.9
+  two: 0.999

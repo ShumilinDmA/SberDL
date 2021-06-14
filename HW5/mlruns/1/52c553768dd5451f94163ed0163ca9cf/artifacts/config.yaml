@@ -1,0 +1,32 @@
+seed: 42
+batch_size: 4096
+num_workers: 2
+epoches: 100
+learning_rate: 0.0003
+lambda_sparce: 0.0001
+test_size: 0.2
+experiment_name: Tabnet_Homework
+run_name: multi_run
+embedding_size: 5
+n_shared_layers: 2
+n_decision_blocks: 2
+hidden_size: 32
+meaningful_part: 0.5
+n_decision_steps: 2
+virtual_batch_size: 128
+momentum: 0.98
+gamma: 1.5
+n_output_classes: 2
+n_classification_layer: 2
+optimizer:
+  name: Adam
+  weight_decay: 0.0001
+  betas:
+    one: 0.9
+    two: 0.999
+scheduler:
+  enable: true
+  factor: 0.5
+  patience: 5
+  cooldown: 5
+  verbose: true

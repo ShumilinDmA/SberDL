@@ -1,0 +1,4 @@
+artifact_location: file:///home/dmitrii/SberDL/HW5/mlruns/1
+experiment_id: '1'
+lifecycle_stage: active
+name: Tabnet_Homework

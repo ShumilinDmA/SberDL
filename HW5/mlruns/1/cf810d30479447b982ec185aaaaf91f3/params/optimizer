@@ -1,0 +1,1 @@
+{'name': 'Adam', 'weight_decay': 0.0001, 'betas': {'one': 0.9, 'two': 0.999}}

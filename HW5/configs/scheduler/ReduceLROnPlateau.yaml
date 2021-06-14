@@ -1,0 +1,6 @@
+# @package _group_
+enable: False
+factor: 0.5
+patience: 5
+cooldown: 5
+verbose: True
