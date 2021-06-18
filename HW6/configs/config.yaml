@@ -5,8 +5,8 @@ learning_rate: 3e-4
 num_workers: 2
 embedding_dim: 5
 scheduler_enable: True
-experiment_name: "First try"
-run_name: "Hello world!"
+experiment_name: "HW6_experiments"
+run_name: 
 
 
 defaults:

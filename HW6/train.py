@@ -5,7 +5,7 @@ from omegaconf import DictConfig
 from torch.utils.data import DataLoader
 from pytorch_lightning.utilities.seed import seed_everything
 
-from src.utils.data import CustomDataset, collate_fn
+from src.data import CustomDataset, collate_fn
 
 # MLflow
 import mlflow
