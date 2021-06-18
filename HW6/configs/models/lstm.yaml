@@ -1,0 +1,7 @@
+_target_: src.models.rnn.RNNnetwork
+embedding_dim: ${embedding_dim}
+feature_dim: 234
+n_lstm_layer: 2
+hidden_dim: 32
+dropout: 0.2
+bidirectional: True

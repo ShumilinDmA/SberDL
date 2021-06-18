@@ -1,0 +1,15 @@
+seed: 47
+max_seq_len_latest: 27
+batch_size: 50
+learning_rate: 3e-4
+num_workers: 2
+embedding_dim: 5
+scheduler_enable: True
+experiment_name: "First try"
+run_name: "Hello world!"
+
+
+defaults:
+  - models: lstm
+  - optimizer: Adam
+  - scheduler: ReduceLROnPlateau
