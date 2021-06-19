@@ -1,11 +1,14 @@
+import os
 import pickle
 import numpy as np
 from omegaconf import DictConfig
 
 from torch.utils.data import DataLoader
+import pytorch_lightning as pl
 from pytorch_lightning.utilities.seed import seed_everything
 
 from src.data import CustomDataset, collate_fn
+from src.train_aux import LightningWrapper
 
 # MLflow
 import mlflow
@@ -82,20 +85,39 @@ def main(cfg: DictConfig):
     model = utils.instantiate(cfg.models, num_uniq_embeddings=num_uniq_embeddings,
                               n_numerical_col=n_numerical_col, feature_dim=feature_dim)
 
-    optimizer = utils.instantiate(cfg.optimizer, params=model.parameters())
+    model_wrapper = LightningWrapper(model=model, cfg=cfg)
 
-    if cfg.scheduler_enable:
-        scheduler = utils.instantiate(cfg.scheduler, optimizer=optimizer)
+    trainer = pl.Trainer(max_epochs=cfg.max_epochs,
+                         checkpoint_callback=cfg.checkpoint_callback,
+                         callbacks=model_wrapper.get_callbacks())
 
     with mlflow.start_run(experiment_id=experiment_id, run_name=cfg.run_name):
+        # Artifact and model
+        mlflow.log_artifact(f"{os.getcwd()}/.hydra/config.yaml")
+        mlflow.log_params(cfg.models)
+
+        # Training parameters
         mlflow.log_param("seed", cfg.seed)
         mlflow.log_param("max_seq_len", cfg.max_seq_len_latest)
+        mlflow.log_param("max_epochs", cfg.max_epochs)
         mlflow.log_param("batch_size", cfg.batch_size)
         mlflow.log_param("learning_rate", cfg.learning_rate)
         mlflow.log_param("embedding_dim", cfg.embedding_dim)
-        mlflow.log_param("scheduler_enable", cfg.scheduler_enable)
+
+        # Optimizer
         mlflow.log_param("optimizer", cfg.optimizer._target_)
         mlflow.log_params({"optimizer_params": cfg.optimizer})
+
+        # Scheduler
+        mlflow.log_param("enable_scheduler", cfg.enable_scheduler)
+        if cfg.enable_scheduler:
+            mlflow.log_params({"scheduler_param": cfg.scheduler})
+
+        mlflow.log_param("enable_early_stopping", cfg.enable_early_stopping)
+        if cfg.enable_early_stopping:
+            mlflow.log_params({"early_stopping_params": cfg.early_stopping})
+
+        trainer.fit(model_wrapper, train_loader, valid_loader)
 
 
 if __name__ == "__main__":

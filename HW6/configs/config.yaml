@@ -1,15 +1,23 @@
 seed: 47
-max_seq_len_latest: 27
-batch_size: 50
+max_seq_len_latest: 32
+max_epochs: 1000
+batch_size: 128
 learning_rate: 3e-4
-num_workers: 2
+num_workers: 8
 embedding_dim: 5
-scheduler_enable: True
 experiment_name: "HW6_experiments"
-run_name: 
+run_name:
+
+# Aux
+enable_scheduler: True
+enable_early_stopping: True
+
+# Trainer
+checkpoint_callback: False
 
 
 defaults:
   - models: lstm
   - optimizer: Adam
   - scheduler: ReduceLROnPlateau
+  - early_stopping: EarlyStopping
