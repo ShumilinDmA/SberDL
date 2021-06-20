@@ -77,6 +77,7 @@ def main(cfg: DictConfig):
             mlflow.log_params({"early_stopping_params": cfg.early_stopping})
 
         trainer.fit(model_wrapper, train_loader, valid_loader)
+        trainer.validate(val_dataloaders=valid_loader, ckpt_path='best')
 
         # Load best model and log it
         model_wrapper.load_from_checkpoint("best_model.ckpt", model=model)

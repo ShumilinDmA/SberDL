@@ -1,6 +1,6 @@
 seed: 47
-max_seq_len_latest: 64
-max_epochs: 3
+max_seq_len_latest: 128
+max_epochs: 1000
 batch_size: 128
 learning_rate: 3e-4
 num_workers: 8

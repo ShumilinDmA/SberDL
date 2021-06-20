@@ -53,8 +53,6 @@ class LightningWrapper(pl.LightningModule):
         f1_score = float(f1(preds=y_proba, target=y_true))
         acc = float(accuracy(preds=y_hat, target=y_true))
 
-        print(f'Train: Loss: {avg_loss}, ROC_AUC: {roc_auc}')
-
         mlflow.log_metric("train_loss", float(avg_loss), step=self.current_epoch)
         mlflow.log_metric("lr", float(self.get_lr()), step=self.current_epoch)
         mlflow.log_metric("train_acc", acc, step=self.current_epoch)
@@ -72,8 +70,6 @@ class LightningWrapper(pl.LightningModule):
         f1_score = float(f1(preds=y_proba, target=y_true))
         acc = float(accuracy(preds=y_hat, target=y_true))
         self.log('val_roc_auc', roc_auc)
-
-        print(f'Valid: Loss: {avg_loss}, ROC_AUC: {roc_auc}')
 
         mlflow.log_metric("val_loss", float(avg_loss), step=self.current_epoch)
         mlflow.log_metric("val_acc", acc, step=self.current_epoch)
