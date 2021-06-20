@@ -1,5 +1,5 @@
 import torch
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, DataLoader
 import numpy as np
 import pickle
 
@@ -49,7 +49,7 @@ def collate_fn(batch):
     return category_data, numerical_data, target_data
 
 
-def load_dataset(path, cfg):
+def get_loader(path, cfg, shuffle: bool):
 
     # Load from pickle
     with open(path, "rb") as file:
@@ -69,4 +69,10 @@ def load_dataset(path, cfg):
                             target_columns=target_columns,
                             drop_columns=drop_columns,
                             max_latest_seq=cfg.max_seq_len_latest)
-    return dataset
+
+    loader = DataLoader(dataset,
+                        batch_size=cfg.batch_size,
+                        shuffle=shuffle,
+                        num_workers=cfg.num_workers,
+                        collate_fn=collate_fn)
+    return loader

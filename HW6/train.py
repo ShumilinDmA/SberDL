@@ -1,11 +1,10 @@
 import os
 from omegaconf import DictConfig
 
-from torch.utils.data import DataLoader
 import pytorch_lightning as pl
 from pytorch_lightning.utilities.seed import seed_everything
 
-from src.data import collate_fn, load_dataset
+from src.data import get_loader
 from src.train_aux import LightningWrapper
 
 # MLflow
@@ -39,20 +38,8 @@ def main(cfg: DictConfig):
     except MlflowException:  # If such experiment already exist
         experiment_id = client.get_experiment_by_name(cfg.experiment_name).experiment_id
 
-    train_dataset = load_dataset(TRAIN_DATA, cfg)
-    valid_dataset = load_dataset(VALID_DATA, cfg)
-
-    train_loader = DataLoader(train_dataset,
-                              batch_size=cfg.batch_size,
-                              shuffle=True,
-                              num_workers=cfg.num_workers,
-                              collate_fn=collate_fn)
-
-    valid_loader = DataLoader(valid_dataset,
-                              batch_size=cfg.batch_size,
-                              shuffle=False,
-                              num_workers=cfg.num_workers,
-                              collate_fn=collate_fn)
+    train_loader = get_loader(TRAIN_DATA, cfg, shuffle=True)
+    valid_loader = get_loader(VALID_DATA, cfg, shuffle=False)
 
     model = utils.instantiate(cfg.models, num_uniq_embeddings=NUM_UNIQUE_EMBEDDINGS,
                               n_numerical_col=N_NUMERICAL_COLUMNS, feature_dim=feature_dim)
@@ -84,6 +71,7 @@ def main(cfg: DictConfig):
         if cfg.enable_scheduler:
             mlflow.log_params({"scheduler_param": cfg.scheduler})
 
+        # Early stopping callback
         mlflow.log_param("enable_early_stopping", cfg.enable_early_stopping)
         if cfg.enable_early_stopping:
             mlflow.log_params({"early_stopping_params": cfg.early_stopping})

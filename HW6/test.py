@@ -2,10 +2,9 @@ import os
 import argparse
 from omegaconf import OmegaConf
 
-from src.data import collate_fn, load_dataset
+from src.data import get_loader
 from src.train_aux import LightningWrapper
 
-from torch.utils.data import DataLoader
 import pytorch_lightning as pl
 from pytorch_lightning.utilities.seed import seed_everything
 
@@ -31,13 +30,7 @@ def main():
 
     seed_everything(seed=cfg.seed, workers=False)
 
-    test_dataset = load_dataset(TEST_DATA, cfg)
-
-    test_loader = DataLoader(test_dataset,
-                             batch_size=cfg.batch_size,
-                             shuffle=False,
-                             num_workers=cfg.num_workers,
-                             collate_fn=collate_fn)
+    test_loader = get_loader(TEST_DATA, cfg, shuffle=False)
 
     loaded_model = mlflow.pytorch.load_model(model_uri)
     model_wrapper = LightningWrapper(loaded_model, cfg=cfg)
