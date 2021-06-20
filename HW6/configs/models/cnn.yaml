@@ -1,0 +1,5 @@
+_target_: src.models.cnn.CNNnetwork
+embedding_dim: ${embedding_dim}
+out_channels: 32
+dropout: 0.75
+kernel_sizes: 2, 3, 4
