@@ -1,0 +1,1 @@
+{'_target_': 'torch.optim.Adam', 'lr': '${learning_rate}', 'weight_decay': 0.0001}

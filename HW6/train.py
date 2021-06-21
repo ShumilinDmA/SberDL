@@ -31,9 +31,14 @@ def main(cfg: DictConfig):
 
     original_pwd = utils.get_original_cwd()
     mlflow.set_tracking_uri('file://' + original_pwd + '/mlruns')
+    # mlflow.set_tracking_uri(f'sqlite:////{original_pwd}/mlruns.db')  # To run mlflow logging in sqlite database
+
     client = MlflowClient()
 
     try:
+        # To log artifact to local machine in artifact_location
+        # experiment_id = client.create_experiment(cfg.experiment_name, artifact_location='file://'
+        #                                                                                 + original_pwd + '/mlruns')
         experiment_id = client.create_experiment(cfg.experiment_name)
     except MlflowException:  # If such experiment already exist
         experiment_id = client.get_experiment_by_name(cfg.experiment_name).experiment_id
@@ -47,7 +52,8 @@ def main(cfg: DictConfig):
     model_wrapper = LightningWrapper(model=model, cfg=cfg)
 
     trainer = pl.Trainer(max_epochs=cfg.max_epochs,
-                         callbacks=model_wrapper.get_callbacks())
+                         callbacks=model_wrapper.get_callbacks(),
+                         num_sanity_val_steps=0)
 
     with mlflow.start_run(experiment_id=experiment_id, run_name=cfg.run_name):
         # Artifact and model

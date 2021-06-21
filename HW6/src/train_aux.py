@@ -108,10 +108,11 @@ class LightningWrapper(pl.LightningModule):
         checkpoint = pl.callbacks.ModelCheckpoint(dirpath=".",
                                                   filename="best_model",
                                                   monitor="val_roc_auc",
-                                                  verbose=True,
+                                                  verbose=False,
                                                   save_top_k=1,
                                                   save_weights_only=False,
-                                                  mode='max')
+                                                  mode='max',
+                                                  save_last=True)
         callbacks.append(checkpoint)
 
         if self.cfg.enable_early_stopping:

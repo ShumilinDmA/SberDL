@@ -32,9 +32,10 @@ class RNNnetwork(nn.Module):
                            batch_first=True,
                            dropout=self.dropout,
                            bidirectional=self.bidirectional)
-
+        self.batch_norm_linear1 = nn.BatchNorm1d(self.hidden_dim * (self.bidirectional + 1))
+        self.dropout_layer = nn.Dropout(self.dropout)
         self.linear_one = nn.Linear(self.hidden_dim * (self.bidirectional + 1), self.hidden_dim)
-        self.batchnorm_linear = nn.BatchNorm1d(self.hidden_dim)
+        self.batchnorm_linear2 = nn.BatchNorm1d(self.hidden_dim)
         self.linear_two = nn.Linear(self.hidden_dim, 2)
 
     def forward(self, batch):
@@ -59,7 +60,9 @@ class RNNnetwork(nn.Module):
         else:
             to_classifier = hidden[-1]
 
-        x = f.relu(self.linear_one(to_classifier))
-        x = self.batchnorm_linear(x)
+        x = self.batch_norm_linear1(to_classifier)
+        x = self.dropout_layer(x)
+        x = f.relu( self.linear_one(x))
+        x = self.batchnorm_linear2(x)
         output = self.linear_two(x)
         return output

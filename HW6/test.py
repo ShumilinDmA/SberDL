@@ -21,7 +21,9 @@ def main():
     args = parser.parse_args()
     run_id = args.run_id
 
+    # mlflow.set_tracking_uri('sqlite:///mlruns.db')  # If database is used, it should be run
     client = MlflowClient()
+
     run = client.get_run(run_id)
 
     model_uri = "runs:/{}/model".format(run.info.run_id)

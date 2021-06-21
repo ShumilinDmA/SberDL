@@ -1,0 +1,15 @@
+artifact_uri: file:///home/dmitrii/SberDL/HW6/mlruns/1/57352dda8ed04786bcc986ec5527dd22/artifacts
+end_time: 1624305739320
+entry_point_name: ''
+experiment_id: '1'
+lifecycle_stage: active
+name: ''
+run_id: 57352dda8ed04786bcc986ec5527dd22
+run_uuid: 57352dda8ed04786bcc986ec5527dd22
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1624305148735
+status: 3
+tags: []
+user_id: dmitrii

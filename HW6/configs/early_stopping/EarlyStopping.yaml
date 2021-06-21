@@ -1,5 +1,5 @@
 _target_: pytorch_lightning.callbacks.EarlyStopping
 monitor: "val_roc_auc"
 patience: 10
-verbose: True
+verbose: False
 mode: "max"
