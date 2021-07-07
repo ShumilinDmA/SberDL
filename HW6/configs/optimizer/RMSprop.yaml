@@ -1,0 +1,5 @@
+_target_: torch.optim.RMSprop
+lr: ${learning_rate}
+weight_decay: 0.001
+momentum: 0.001
+alpha: 0.99

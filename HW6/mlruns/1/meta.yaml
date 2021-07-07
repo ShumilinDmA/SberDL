@@ -1,0 +1,4 @@
+artifact_location: file:///home/dmitrii/SberDL/HW6/mlruns/1
+experiment_id: '1'
+lifecycle_stage: active
+name: HW6_experiments
